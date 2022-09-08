@@ -1,6 +1,9 @@
 const ENDPOINT =
   "https://7lavw682q2.execute-api.us-east-1.amazonaws.com/Test/videos";
 
+// const YoutubeService = require('./YoutubeService');
+import YoutubeService from "../services/YoutubeService";
+
 const VideosService = {
   // Remove a video from AWS
   removeVideo(id) {
@@ -40,42 +43,57 @@ const VideosService = {
       });
   },
   // Store a new video in AWS
-  storeVideo(url) {
-    return fetch(ENDPOINT, {
-      method: "POST",
-      body: JSON.stringify({
-        url: url
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-      .then((response) => response.json())
-      .then((response) => {
-        // Parse JSON content
-        const parsedJson = JSON.parse(response.body);
-        if (response.statusCode === 201) {
-          // Return data from the retrieved JSON content
-          return {
-            success: true,
-            data: parsedJson.data
-          };
-        } else {
-          // Return error from the retrieved JSON content
-          return {
-            success: false,
-            error: parsedJson.error.message
-          };
+  async storeVideo(url) {
+    // const id = '_f71BHguJqYOO';
+
+    const reg = /(http)(s)?(:\/\/(www.youtube.com\/watch\?v=|youtu.be\/)?([A-z0-9]+))/;
+    const id = url.match(reg)[5];
+
+    const validVideo = await YoutubeService.getVideoInformation(id);
+    console.log(validVideo);
+
+    if(validVideo.success)
+    {
+      return fetch(ENDPOINT, {
+        method: "POST",
+        body: JSON.stringify({
+          url: url
+        }),
+        headers: {
+          "Content-Type": "application/json"
         }
       })
-      .catch((error) => {
-        console.log(error);
-        // Return error
-        return {
-          success: false,
-          error: "Fail on storing video."
-        };
-      });
+        .then((response) => response.json())
+        .then((response) => {
+          // Parse JSON content
+          const parsedJson = JSON.parse(response.body);
+          if (response.statusCode === 201) {
+            // Return data from the retrieved JSON content
+            return {
+              success: true,
+              data: parsedJson.data
+            };
+          } else {
+            // Return error from the retrieved JSON content
+            return {
+              success: false,
+              error: parsedJson.error.message
+            };
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          // Return error
+          return {
+            success: false,
+            error: "Fail on storing video."
+          };
+        });
+    }
+    else
+    {
+      return validVideo;
+    }
   },
   // Get all videos from AWS
   getVideos() {
