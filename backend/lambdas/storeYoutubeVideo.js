@@ -81,20 +81,18 @@ exports.handler = async (event) => {
     else
     {
         // Validate Youtube URL
-        const reUrl = /(http)(s)?(\:\/\/www.youtube.com\/watch\?v=)([A-z0-9])+/g;
+        const reUrl = /(http)(s)?(\:\/\/(www.youtube.com\/watch\?v=|youtu.be\/)?([A-z0-9]+))/;
         if(event.url.toLowerCase().match(reUrl))
         {
-            const reId = /(v|V)(=)([A-z0-9])+/g;
-            const matchId = event.url.match(reId);
+            /**
+             *  It takes the same ID as Youtube
+             *  from URL.
+             */
+            const id = event.url.match(reUrl)[5];
             
             // If ID was matched
-            if(matchId)
+            if(id)
             {
-                /**
-                 *  It takes the same ID as Youtube
-                 *  from V param in URL.
-                 */
-                const id = matchId[0].replace('v=', '');
                 
                 // Check if video already exists
                 const video = await getYoutubeVideo(
